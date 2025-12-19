@@ -38,7 +38,8 @@
   },
   "author": "webistory",
   "platforms": [
-    "Windows"
+    "Windows",
+    "macOS"
   ],
   "categories": [
     "Developer Tools",

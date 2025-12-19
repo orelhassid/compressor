@@ -6,6 +6,9 @@ import { environment } from "@raycast/api";
 
 const execFileAsync = promisify(execFile);
 
+// Cache for ffmpeg path to avoid multiple lookups
+let cachedFfmpegPath: string | null = null;
+
 export interface CompressionResult {
     success: boolean;
     outputPath?: string;
@@ -15,39 +18,130 @@ export interface CompressionResult {
 }
 
 /**
- * Get ffmpeg path - prioritizes bundled asset
+ * Get ffmpeg path - prioritizes ffmpeg-static, then bundled asset, then system ffmpeg
+ * Uses caching to avoid repeated lookups
  */
 function getFfmpegPath(): string {
-    // Priority 1: Bundled asset (this is what Raycast bundles with the extension)
-    const assetPath = path.join(environment.assetsPath, "ffmpeg.exe");
-    if (fs.existsSync(assetPath)) {
-        return assetPath;
+    // Return cached path if available
+    if (cachedFfmpegPath !== null && fs.existsSync(cachedFfmpegPath)) {
+        return cachedFfmpegPath;
     }
 
-    // Priority 2: Try ffmpeg-static from node_modules (dev mode)
+    const isWindows = process.platform === "win32";
+    const exeExtension = isWindows ? ".exe" : "";
+
+    
+    // Priority 1: Try ffmpeg-static module (dynamic import/require)
     try {
-        const ffmpegStatic = require("ffmpeg-static");
-        if (ffmpegStatic && fs.existsSync(ffmpegStatic)) {
-            return ffmpegStatic;
+        // Try CommonJS require
+        let ffmpegStaticPath: string | undefined;
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const ffmpegStaticModule = require("ffmpeg-static");
+            ffmpegStaticPath = typeof ffmpegStaticModule === "string" 
+                ? ffmpegStaticModule 
+                : (ffmpegStaticModule?.default || ffmpegStaticModule?.path || ffmpegStaticModule);
+            
+            if (ffmpegStaticPath && fs.existsSync(ffmpegStaticPath)) {
+                foundPath = ffmpegStaticPath;
+            }
+        } catch (requireError) {
+            // require failed, continue to path-based search
         }
     } catch (e) {
-        // Not available
+        // Continue to next method
     }
 
-    // Priority 3: Development fallbacks
-    const devPaths = [
-        path.join(process.cwd(), "node_modules", "ffmpeg-static", "ffmpeg.exe"),
-        path.join(__dirname, "..", "..", "node_modules", "ffmpeg-static", "ffmpeg.exe"),
-    ];
+    // Priority 2: Search for ffmpeg-static in node_modules (platform-specific)
+    if (!foundPath) {
+        // Get the extension directory (where Raycast extensions are installed)
+        const extensionDir = environment.assetsPath 
+            ? path.resolve(environment.assetsPath, "..") 
+            : __dirname;
 
-    for (const devPath of devPaths) {
-        if (fs.existsSync(devPath)) {
-            return devPath;
+        // Build search paths array
+        const searchPaths: string[] = [
+            // Development mode - from project root
+            path.join(process.cwd(), "node_modules", "ffmpeg-static", `ffmpeg${exeExtension}`),
+            // Built extension - relative to compiled file location
+            path.join(__dirname, "..", "..", "node_modules", "ffmpeg-static", `ffmpeg${exeExtension}`),
+            // Alternative built extension location
+            path.join(__dirname, "node_modules", "ffmpeg-static", `ffmpeg${exeExtension}`),
+            // Extension directory (Raycast extension installation location)
+            path.join(extensionDir, "node_modules", "ffmpeg-static", `ffmpeg${exeExtension}`),
+        ];
+
+        // Try to find node_modules by walking up the directory tree from __dirname
+        let currentDir = __dirname;
+        for (let i = 0; i < 5; i++) {
+            const nodeModulesPath = path.join(currentDir, "node_modules", "ffmpeg-static", `ffmpeg${exeExtension}`);
+            searchPaths.push(nodeModulesPath);
+            const parentDir = path.dirname(currentDir);
+            if (parentDir === currentDir) break; // Reached root
+            currentDir = parentDir;
+        }
+
+        // Try using require.resolve if module resolution is available
+        try {
+            // Try to resolve the package.json first
+            const basePath = require.resolve("ffmpeg-static/package.json");
+            const ffmpegPath = path.join(path.dirname(basePath), `ffmpeg${exeExtension}`);
+            if (fs.existsSync(ffmpegPath)) {
+                searchPaths.unshift(ffmpegPath); // Add to front of array (higher priority)
+            }
+        } catch {
+            // Try direct resolution
+            try {
+                const resolved = require.resolve(`ffmpeg-static/ffmpeg${exeExtension}`);
+                if (fs.existsSync(resolved)) {
+                    searchPaths.unshift(resolved); // Add to front of array (higher priority)
+                }
+            } catch {
+                // Resolution failed, continue with path-based search
+            }
+        }
+
+        // Search through all paths
+        for (const searchPath of searchPaths) {
+            if (fs.existsSync(searchPath)) {
+                foundPath = searchPath;
+                break;
+            }
         }
     }
 
-    // Last resort: system ffmpeg (will fail with helpful error)
-    return "ffmpeg";
+    // Priority 3: Bundled asset (Raycast extension assets folder)
+    if (!foundPath) {
+        const assetPath = path.join(environment.assetsPath, `ffmpeg${exeExtension}`);
+        if (fs.existsSync(assetPath)) {
+            foundPath = assetPath;
+        }
+    }
+
+    // Priority 4: System ffmpeg (last resort)
+    // Check common system locations for macOS
+    if (!foundPath && process.platform === "darwin") {
+        const systemPaths = [
+            "/opt/homebrew/bin/ffmpeg",
+            "/usr/local/bin/ffmpeg",
+            "/usr/bin/ffmpeg",
+        ];
+        for (const systemPath of systemPaths) {
+            if (fs.existsSync(systemPath)) {
+                foundPath = systemPath;
+                break;
+            }
+        }
+    }
+
+    // Final fallback: just "ffmpeg" (will try PATH)
+    if (!foundPath) {
+        foundPath = "ffmpeg";
+    }
+
+    // Cache the found path
+    cachedFfmpegPath = foundPath;
+    return foundPath;
 }
 
 /**
@@ -83,7 +177,7 @@ export async function compressImage(inputPath: string): Promise<CompressionResul
             ],
             {
                 maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-                windowsHide: true,
+                windowsHide: process.platform === "win32",
             }
         );
 
@@ -106,7 +200,8 @@ export async function compressImage(inputPath: string): Promise<CompressionResul
         // Add helpful debugging info
         if (errorMessage.includes("spawn") || errorMessage.includes("ENOENT")) {
             const ffmpegPath = getFfmpegPath();
-            const assetPath = path.join(environment.assetsPath, "ffmpeg.exe");
+            const isWindows = process.platform === "win32";
+            const assetPath = path.join(environment.assetsPath, `ffmpeg${isWindows ? ".exe" : ""}`);
             errorMessage = `FFmpeg not found. Tried: ${ffmpegPath}. Asset path: ${assetPath}. Error: ${errorMessage}`;
         }
 
@@ -156,7 +251,7 @@ export async function compressVideo(inputPath: string): Promise<CompressionResul
             ],
             {
                 maxBuffer: 50 * 1024 * 1024, // 50MB buffer for video
-                windowsHide: true,
+                windowsHide: process.platform === "win32",
             }
         );
 
@@ -179,7 +274,8 @@ export async function compressVideo(inputPath: string): Promise<CompressionResul
         // Add helpful debugging info
         if (errorMessage.includes("spawn") || errorMessage.includes("ENOENT")) {
             const ffmpegPath = getFfmpegPath();
-            const assetPath = path.join(environment.assetsPath, "ffmpeg.exe");
+            const isWindows = process.platform === "win32";
+            const assetPath = path.join(environment.assetsPath, `ffmpeg${isWindows ? ".exe" : ""}`);
             errorMessage = `FFmpeg not found. Tried: ${ffmpegPath}. Asset path: ${assetPath}. Error: ${errorMessage}`;
         }
 
@@ -189,3 +285,4 @@ export async function compressVideo(inputPath: string): Promise<CompressionResul
         };
     }
 }
+
