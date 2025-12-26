@@ -50,6 +50,12 @@ export interface BatchResult {
 // Predefined resize presets for images
 export const IMAGE_PRESETS: ResizePreset[] = [
   {
+    name: "2K",
+    description: "2560px (Ultra-wide/Hero)",
+    maxWidth: 2560,
+    maxHeight: 2560,
+  },
+  {
     name: "Large",
     description: "1920px (max dimension)",
     maxWidth: 1920,
@@ -77,6 +83,12 @@ export const IMAGE_PRESETS: ResizePreset[] = [
 
 // Predefined resize presets for videos
 export const VIDEO_PRESETS: ResizePreset[] = [
+  {
+    name: "1440p",
+    description: "2560x1440 (2K)",
+    width: 2560,
+    height: 1440,
+  },
   {
     name: "1080p",
     description: "1920x1080 (Full HD)",

@@ -1,10 +1,17 @@
-import { showToast, Toast, getSelectedFinderItems, showHUD } from "@raycast/api";
+import { showToast, Toast, getSelectedFinderItems, showHUD, getPreferenceValues } from "@raycast/api";
 import { processBatch, generateBatchSummary } from "./utils/batch-processor";
 import { ProcessingOptions, IMAGE_PRESETS, VIDEO_PRESETS } from "./utils/types";
 import { fileTypeFromFile } from "file-type";
 
+interface Preferences {
+  defaultImageResizePreset: string;
+  defaultVideoResizePreset: string;
+}
+
 export default async function Command() {
   try {
+    const preferences = getPreferenceValues<Preferences>();
+
     // Show initial loading toast
     await showToast({
       style: Toast.Style.Animated,
@@ -30,15 +37,20 @@ export default async function Command() {
     const firstFileType = await fileTypeFromFile(filePaths[0]);
     const isVideo = firstFileType?.mime.startsWith("video/");
 
-    // Use Medium preset for images (1280px) or 720p for videos
-    const preset = isVideo
-      ? VIDEO_PRESETS.find((p) => p.name === "720p")!
-      : IMAGE_PRESETS.find((p) => p.name === "Medium")!;
+    // Use presets from preferences
+    let preset;
+    if (isVideo) {
+      const presetName = preferences.defaultVideoResizePreset || "720p";
+      preset = presetName === "Original" ? undefined : VIDEO_PRESETS.find((p) => p.name === presetName);
+    } else {
+      const presetName = preferences.defaultImageResizePreset || "Medium";
+      preset = presetName === "Original" ? undefined : IMAGE_PRESETS.find((p) => p.name === presetName);
+    }
 
     // Process all files with both resize and compress
     const options: ProcessingOptions = {
       compress: true,
-      resize: true,
+      resize: !!preset,
       resizePreset: preset,
     };
 

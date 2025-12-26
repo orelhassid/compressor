@@ -23,6 +23,18 @@
       "title": "Optimize for Web",
       "description": "Resize and compress files for web usage",
       "mode": "no-view"
+    },
+    {
+      "name": "optimize-for-web-x1",
+      "title": "Optimize for Web (x1)",
+      "description": "One-click standard optimization (1280px/720p)",
+      "mode": "no-view"
+    },
+    {
+      "name": "optimize-for-web-x2",
+      "title": "Optimize for Web (x2)",
+      "description": "One-click high-res optimization (2560px/1440p)",
+      "mode": "no-view"
     }
   ],
   "dependencies": {
@@ -54,6 +66,78 @@
       "title": "Output Folder Name",
       "description": "Folder name where optimized files will be saved (relative to source file)",
       "default": "Optimized",
+      "required": false
+    },
+    {
+      "name": "defaultImageResizePreset",
+      "type": "dropdown",
+      "title": "Default Image Resize",
+      "description": "Default preset used for 'Optimize for Web' command",
+      "default": "Medium",
+      "required": false,
+      "data": [
+        {
+          "title": "Maintain Original",
+          "value": "Original"
+        },
+        {
+          "title": "2K (2560px)",
+          "value": "2K"
+        },
+        {
+          "title": "Large (1920px)",
+          "value": "Large"
+        },
+        {
+          "title": "Medium (1280px)",
+          "value": "Medium"
+        },
+        {
+          "title": "Small (800px)",
+          "value": "Small"
+        },
+        {
+          "title": "Thumbnail (400px)",
+          "value": "Thumbnail"
+        }
+      ]
+    },
+    {
+      "name": "defaultVideoResizePreset",
+      "type": "dropdown",
+      "title": "Default Video Resize",
+      "description": "Default preset used for 'Optimize for Web' command",
+      "default": "720p",
+      "required": false,
+      "data": [
+        {
+          "title": "Maintain Original",
+          "value": "Original"
+        },
+        {
+          "title": "1440p (2K)",
+          "value": "1440p"
+        },
+        {
+          "title": "1080p (Full HD)",
+          "value": "1080p"
+        },
+        {
+          "title": "720p (HD)",
+          "value": "720p"
+        },
+        {
+          "title": "480p (SD)",
+          "value": "480p"
+        }
+      ]
+    },
+    {
+      "name": "imageQuality",
+      "type": "textfield",
+      "title": "Image Quality (1-100)",
+      "description": "WebP quality setting (80 is recommended)",
+      "default": "80",
       "required": false
     }
   ],

@@ -175,6 +175,8 @@ export async function compressImage(
         "80",
         "-compression_level",
         "6",
+        "-map_metadata",
+        "-1",
         "-y", // Overwrite output file
         outputPath,
       ],
@@ -260,6 +262,8 @@ export async function compressVideo(
         "128k",
         "-movflags",
         "+faststart",
+        "-map_metadata",
+        "-1",
         "-y", // Overwrite output file
         outputPath,
       ],
