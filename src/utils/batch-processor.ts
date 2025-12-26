@@ -69,7 +69,7 @@ export async function processBatch(filePaths: string[], options: ProcessingOptio
       }
 
       // Progress callback for individual file
-      const progressCallback = (stage: OperationStage | string, percentage: number, message?: string) => {
+      const progressCallback = (stage: OperationStage | string, percentage: number) => {
         showToast({
           style: Toast.Style.Animated,
           title: `File ${fileNumber}/${totalFiles} (${Math.round(((fileNumber - 1 + percentage / 100) / totalFiles) * 100)}%)`,

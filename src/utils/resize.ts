@@ -14,10 +14,11 @@ let getFfmpegPathFunc: (() => string) | null = null;
  */
 function getFfmpegPath(): string {
   if (!getFfmpegPathFunc) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const compressionModule = require("./compression");
     getFfmpegPathFunc = compressionModule.getFfmpegPath;
   }
-  return getFfmpegPathFunc();
+  return getFfmpegPathFunc ? getFfmpegPathFunc() : "ffmpeg";
 }
 
 /**

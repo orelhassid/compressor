@@ -2,14 +2,11 @@ import { showToast, Toast, getSelectedFinderItems, showHUD, List, ActionPanel, A
 import { useState } from "react";
 import { processBatch, generateBatchSummary } from "./utils/batch-processor";
 import { ProcessingOptions, IMAGE_PRESETS, VIDEO_PRESETS, ResizePreset } from "./utils/types";
-import { fileTypeFromFile } from "file-type";
 
 export default function Command() {
-  const [selectedPreset, setSelectedPreset] = useState<ResizePreset | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   async function handleResize(preset: ResizePreset) {
-    setSelectedPreset(preset);
     setIsProcessing(true);
 
     try {
@@ -35,8 +32,6 @@ export default function Command() {
       const filePaths = selectedFiles.map((file) => file.path);
 
       // Determine if files are images or videos (check first file)
-      const firstFileType = await fileTypeFromFile(filePaths[0]);
-      const isVideo = firstFileType?.mime.startsWith("video/");
 
       // Process all files with resize only
       const options: ProcessingOptions = {

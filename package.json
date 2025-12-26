@@ -3,7 +3,7 @@
   "name": "compressor",
   "title": "Compressor",
   "description": "Compress Images and Videos in one click for web",
-  "icon": "assets/extension-icon.png",
+  "icon": "extension-icon.png",
   "license": "MIT",
   "commands": [
     {

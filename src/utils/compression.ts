@@ -84,7 +84,6 @@ export function getFfmpegPath(): string {
     // Try using require.resolve if module resolution is available
     try {
       // Try to resolve the package.json first
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const basePath = require.resolve("ffmpeg-static/package.json");
       const ffmpegPath = path.join(path.dirname(basePath), `ffmpeg${exeExtension}`);
       if (fs.existsSync(ffmpegPath)) {
@@ -93,7 +92,6 @@ export function getFfmpegPath(): string {
     } catch {
       // Try direct resolution
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const resolved = require.resolve(`ffmpeg-static/ffmpeg${exeExtension}`);
         if (fs.existsSync(resolved)) {
           searchPaths.unshift(resolved); // Add to front of array (higher priority)
