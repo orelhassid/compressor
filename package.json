@@ -7,32 +7,14 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "compress-files",
-      "title": "Compress Files",
-      "description": "Compress selected images and videos",
-      "mode": "no-view"
-    },
-    {
-      "name": "resize-files",
-      "title": "Resize Files",
-      "description": "Resize images and videos to web-optimized dimensions",
-      "mode": "view"
-    },
-    {
-      "name": "optimize-for-web",
-      "title": "Optimize for Web",
-      "description": "Resize and compress files for web usage",
-      "mode": "no-view"
-    },
-    {
-      "name": "optimize-for-web-x1",
-      "title": "Optimize for Web (x1)",
+      "name": "compress-resize-x1",
+      "title": "Compress & Resize x1",
       "description": "One-click standard optimization (1280px/720p)",
       "mode": "no-view"
     },
     {
-      "name": "optimize-for-web-x2",
-      "title": "Optimize for Web (x2)",
+      "name": "compress-resize-x2",
+      "title": "Compress & Resize x2",
       "description": "One-click high-res optimization (2560px/1440p)",
       "mode": "no-view"
     }

@@ -8,7 +8,7 @@ export default async function Command() {
         // Show initial loading toast
         await showToast({
             style: Toast.Style.Animated,
-            title: "Optimizing for web (x1)...",
+            title: "Compressing & resizing (x1)...",
             message: "Getting selected files",
         });
 
@@ -45,7 +45,7 @@ export default async function Command() {
         const result = await processBatch(filePaths, options);
 
         // Show summary
-        const summary = generateBatchSummary(result, "Optimized for web (x1)");
+        const summary = generateBatchSummary(result, "Compressed & resized (x1)");
         await showHUD(summary);
 
         // If there were errors, show them in a toast
