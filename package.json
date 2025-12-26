@@ -3,15 +3,26 @@
   "name": "compressor",
   "title": "Compressor",
   "description": "Compress Images and Videos in one click for web",
-  "icon": "extension-icon.png",
+  "icon": "assets/extension-icon.png",
   "license": "MIT",
   "commands": [
     {
-      "name": "compress-file",
-      "title": "Compress File",
-      "description": "Compress any selected file",
-      "mode": "no-view",
-      "subtitle": ""
+      "name": "compress-files",
+      "title": "Compress Files",
+      "description": "Compress selected images and videos",
+      "mode": "no-view"
+    },
+    {
+      "name": "resize-files",
+      "title": "Resize Files",
+      "description": "Resize images and videos to web-optimized dimensions",
+      "mode": "view"
+    },
+    {
+      "name": "optimize-for-web",
+      "title": "Optimize for Web",
+      "description": "Resize and compress files for web usage",
+      "mode": "no-view"
     }
   ],
   "dependencies": {
@@ -36,6 +47,16 @@
     "publish": "npx @raycast/api@latest publish",
     "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1"
   },
+  "preferences": [
+    {
+      "name": "outputFolderName",
+      "type": "textfield",
+      "title": "Output Folder Name",
+      "description": "Folder name where optimized files will be saved (relative to source file)",
+      "default": "Optimized",
+      "required": false
+    }
+  ],
   "author": "webistory",
   "platforms": [
     "Windows",
