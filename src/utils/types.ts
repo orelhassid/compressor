@@ -9,11 +9,18 @@ export enum OperationStage {
   Finalizing = "Finalizing",
 }
 
+export enum CompressionMode {
+  Original = "original",
+  MaxOptimize = "max",
+  MinimumOptimize = "minimum",
+}
+
 export interface ProcessingOptions {
   compress?: boolean;
   resize?: boolean;
   resizePreset?: ResizePreset;
-  outputFormat?: "webp" | "mp4" | "original";
+  outputFormat?: "webp" | "mp4" | "pdf" | "original";
+  compressionMode?: CompressionMode;
 }
 
 export interface ProcessingResult {
@@ -23,10 +30,10 @@ export interface ProcessingResult {
   processedSize?: number;
   error?: string;
   fileName?: string;
-  fileType?: "image" | "video";
+  fileType?: "image" | "video" | "pdf";
 }
 
-export type ProgressCallback = (stage: OperationStage, percentage: number, message?: string) => void;
+export type ProgressCallback = (stage: OperationStage | string, percentage: number, message?: string) => void;
 
 export interface ResizePreset {
   name: string;

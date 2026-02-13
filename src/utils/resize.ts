@@ -51,8 +51,8 @@ export async function resizeImage(
       // Max dimension mode - fit within bounds while maintaining aspect ratio
       scaleFilter = `scale='min(${preset.maxWidth},iw)':'min(${preset.maxHeight},ih)':force_original_aspect_ratio=decrease`;
     } else if (preset.width && preset.height) {
-      // Exact dimension mode - scale to exact size with aspect ratio preservation
-      scaleFilter = `scale=${preset.width}:${preset.height}:force_original_aspect_ratio=decrease`;
+      // Exact dimension mode - but avoid upscaling if image is smaller
+      scaleFilter = `scale='min(${preset.width},iw)':'min(${preset.height},ih)':force_original_aspect_ratio=decrease`;
     }
 
     progressCallback?.(OperationStage.Resizing, 60, "Processing image");
@@ -141,8 +141,8 @@ export async function resizeVideo(
     // Build scale filter
     let scaleFilter = "";
     if (preset.width && preset.height) {
-      // Exact dimensions with aspect ratio preservation
-      scaleFilter = `scale=${preset.width}:${preset.height}:force_original_aspect_ratio=decrease,pad=${preset.width}:${preset.height}:(ow-iw)/2:(oh-ih)/2`;
+      // Exact dimensions - but avoid upscaling if video is smaller, and don't pad
+      scaleFilter = `scale='min(${preset.width},iw)':'min(${preset.height},ih)':force_original_aspect_ratio=decrease`;
     } else if (preset.maxWidth && preset.maxHeight) {
       // Max dimension mode
       scaleFilter = `scale='min(${preset.maxWidth},iw)':'min(${preset.maxHeight},ih)':force_original_aspect_ratio=decrease`;

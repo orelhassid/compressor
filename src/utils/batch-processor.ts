@@ -3,11 +3,12 @@ import { fileTypeFromFile } from "file-type";
 import path from "path";
 import fs from "fs";
 import { ProcessingResult, BatchResult, ProcessingOptions, OperationStage } from "./types";
-import { compressImage, compressVideo } from "./compression";
-import { resizeImage, resizeVideo } from "./resize";
+import { routeFileCompression } from "./file-router";
+import { PDFQualityPreset } from "./pdf-compression";
 
 interface Preferences {
   outputFolderName?: string;
+  pdfQuality?: PDFQualityPreset;
 }
 
 /**
@@ -58,16 +59,6 @@ export async function processBatch(filePaths: string[], options: ProcessingOptio
         continue;
       }
 
-      const { mime } = fileType;
-      const isImage = mime.startsWith("image/");
-      const isVideo = mime.startsWith("video/");
-
-      if (!isImage && !isVideo) {
-        errors.push({ file: fileName, error: `Unsupported file type: ${mime}` });
-        failureCount++;
-        continue;
-      }
-
       // Progress callback for individual file
       const progressCallback = (stage: OperationStage | string, percentage: number) => {
         showToast({
@@ -77,51 +68,12 @@ export async function processBatch(filePaths: string[], options: ProcessingOptio
         });
       };
 
-      let result: ProcessingResult | null = null;
-      const intermediateFiles: string[] = [];
-
-      // Process based on options
-      if (options.resize && options.compress) {
-        // Two-stage: resize then compress
-        if (isImage) {
-          const resizeResult = await resizeImage(filePath, options.resizePreset!, progressCallback);
-          if (resizeResult.success && resizeResult.outputPath) {
-            intermediateFiles.push(resizeResult.outputPath);
-            result = await compressImage(resizeResult.outputPath, progressCallback);
-            // Update result to reflect original file
-            if (result.success) {
-              result.originalSize = resizeResult.originalSize;
-            }
-          } else {
-            result = resizeResult;
-          }
-        } else {
-          const resizeResult = await resizeVideo(filePath, options.resizePreset!, progressCallback);
-          if (resizeResult.success && resizeResult.outputPath) {
-            intermediateFiles.push(resizeResult.outputPath);
-            result = await compressVideo(resizeResult.outputPath, progressCallback);
-            if (result.success) {
-              result.originalSize = resizeResult.originalSize;
-            }
-          } else {
-            result = resizeResult;
-          }
-        }
-      } else if (options.resize) {
-        // Resize only
-        result = isImage
-          ? await resizeImage(filePath, options.resizePreset!, progressCallback)
-          : await resizeVideo(filePath, options.resizePreset!, progressCallback);
-      } else if (options.compress) {
-        // Compress only
-        result = isImage
-          ? await compressImage(filePath, progressCallback)
-          : await compressVideo(filePath, progressCallback);
-      }
+      // Use file router to process based on file type
+      const pdfQuality = (preferences.pdfQuality as PDFQualityPreset) || "medium";
+      const result = await routeFileCompression(filePath, options, pdfQuality, progressCallback);
 
       if (result && result.success && result.outputPath) {
         // Handle output folder
-        let finalPath = result.outputPath;
         if (outputFolderName) {
           const targetDir = path.join(sourceDir, outputFolderName);
           if (!fs.existsSync(targetDir)) {
@@ -134,15 +86,7 @@ export async function processBatch(filePaths: string[], options: ProcessingOptio
             // Rename might fail across partitions, so we should be careful,
             // but usually it's in the same subfolder
             fs.renameSync(result.outputPath, newPath);
-            finalPath = newPath;
             result.outputPath = newPath;
-          }
-        }
-
-        // Clean up intermediate files
-        for (const tempFile of intermediateFiles) {
-          if (fs.existsSync(tempFile) && tempFile !== finalPath) {
-            fs.unlinkSync(tempFile);
           }
         }
 

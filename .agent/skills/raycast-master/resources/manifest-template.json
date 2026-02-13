@@ -1,0 +1,10 @@
+{
+    "name": "My Extension",
+    "commands": [
+        {
+            "name": "index",
+            "title": "My Command",
+            "mode": "view"
+        }
+    ]
+}

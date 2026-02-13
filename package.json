@@ -2,20 +2,20 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "compressor",
   "title": "Compressor",
-  "description": "Compress Images and Videos in one click for web",
+  "description": "Compress Images, Videos, and PDFs in one click for web",
   "icon": "extension-icon.png",
   "license": "MIT",
   "commands": [
     {
-      "name": "compress-resize-x1",
-      "title": "Compress & Resize x1",
-      "description": "One-click standard optimization (1280px/720p)",
+      "name": "compress-files",
+      "title": "Compress File/s",
+      "description": "Optimize images, videos, and PDFs for web",
       "mode": "no-view"
     },
     {
-      "name": "compress-resize-x2",
-      "title": "Compress & Resize x2",
-      "description": "One-click high-res optimization (2560px/1440p)",
+      "name": "convert-spreadsheet",
+      "title": "Convert Spreadsheet to CSV/JSON",
+      "description": "Convert XLS/XLSX files to CSV or JSON",
       "mode": "no-view"
     }
   ],
@@ -23,12 +23,14 @@
     "@raycast/api": "^1.103.0",
     "@raycast/utils": "^2.2.1",
     "ffmpeg-static": "^5.3.0",
-    "file-type": "^21.1.1"
+    "file-type": "^21.1.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.0.4",
     "@types/node": "22.13.10",
     "@types/react": "19.0.10",
+    "@types/xlsx": "^0.0.35",
     "eslint": "^9.22.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2"
@@ -43,6 +45,28 @@
   },
   "preferences": [
     {
+      "name": "compressionMode",
+      "type": "dropdown",
+      "title": "Compression Mode",
+      "description": "Choose how to optimize your files",
+      "default": "max",
+      "required": false,
+      "data": [
+        {
+          "title": "Original Size (Optimize Only)",
+          "value": "original"
+        },
+        {
+          "title": "Max Optimize (2K/1440p)",
+          "value": "max"
+        },
+        {
+          "title": "Minimum Optimize (1080p/720p)",
+          "value": "minimum"
+        }
+      ]
+    },
+    {
       "name": "outputFolderName",
       "type": "textfield",
       "title": "Output Folder Name",
@@ -51,66 +75,24 @@
       "required": false
     },
     {
-      "name": "defaultImageResizePreset",
+      "name": "pdfQuality",
       "type": "dropdown",
-      "title": "Default Image Resize",
-      "description": "Default preset used for 'Optimize for Web' command",
-      "default": "Medium",
+      "title": "PDF Quality",
+      "description": "Quality preset for PDF compression",
+      "default": "medium",
       "required": false,
       "data": [
         {
-          "title": "Maintain Original",
-          "value": "Original"
+          "title": "High (300 DPI, print-ready)",
+          "value": "high"
         },
         {
-          "title": "2K (2560px)",
-          "value": "2K"
+          "title": "Medium (150 DPI, web/email)",
+          "value": "medium"
         },
         {
-          "title": "Large (1920px)",
-          "value": "Large"
-        },
-        {
-          "title": "Medium (1280px)",
-          "value": "Medium"
-        },
-        {
-          "title": "Small (800px)",
-          "value": "Small"
-        },
-        {
-          "title": "Thumbnail (400px)",
-          "value": "Thumbnail"
-        }
-      ]
-    },
-    {
-      "name": "defaultVideoResizePreset",
-      "type": "dropdown",
-      "title": "Default Video Resize",
-      "description": "Default preset used for 'Optimize for Web' command",
-      "default": "720p",
-      "required": false,
-      "data": [
-        {
-          "title": "Maintain Original",
-          "value": "Original"
-        },
-        {
-          "title": "1440p (2K)",
-          "value": "1440p"
-        },
-        {
-          "title": "1080p (Full HD)",
-          "value": "1080p"
-        },
-        {
-          "title": "720p (HD)",
-          "value": "720p"
-        },
-        {
-          "title": "480p (SD)",
-          "value": "480p"
+          "title": "Low (72 DPI, maximum compression)",
+          "value": "low"
         }
       ]
     },
@@ -120,6 +102,24 @@
       "title": "Image Quality (1-100)",
       "description": "WebP quality setting (80 is recommended)",
       "default": "80",
+      "required": false
+    },
+    {
+      "name": "exportCsv",
+      "type": "checkbox",
+      "label": "Export CSV",
+      "title": "Spreadsheet Conversion",
+      "description": "Convert sheets to CSV files",
+      "default": true,
+      "required": false
+    },
+    {
+      "name": "exportJson",
+      "type": "checkbox",
+      "label": "Export JSON",
+      "title": "",
+      "description": "Convert sheets to a JSON file",
+      "default": false,
       "required": false
     }
   ],
